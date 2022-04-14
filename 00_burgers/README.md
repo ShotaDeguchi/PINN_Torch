@@ -1,1 +1,1 @@
-
+# Burgers equation
