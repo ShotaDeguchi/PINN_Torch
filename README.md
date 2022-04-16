@@ -2,8 +2,9 @@
 
 
 ## Test: Mermaid
-```mermaid
-  graph TD;
+```
+mermaid
+  graph LR;
     A-->B;
     A-->C;
     B-->C;
