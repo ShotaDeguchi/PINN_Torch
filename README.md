@@ -5,6 +5,7 @@
 ```mermaid
   graph TD;
     A-->B;
+    A-->C;
     B-->C;
     c-->A;
 ```
