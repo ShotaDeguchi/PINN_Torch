@@ -2,12 +2,11 @@
 
 
 ## Test: Mermaid
-```
-mermaid
-graph TD;
-A-->B;
-B-->C;
-c-->A;
+```mermaid
+  graph TD;
+    A-->B;
+    B-->C;
+    c-->A;
 ```
 
 
