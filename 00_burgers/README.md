@@ -7,7 +7,7 @@ The following is the PINN-derived solution under a specific initial and boundary
 <img src="./figures/PINN_Burgers.png">
 
 ## Dependencies
-Tested with
+Tested with the following:
 |Package|Version|
 |:---:|:---:|
 |python|3.8.10|
