@@ -27,8 +27,8 @@ def main():
     XT_pde_trn, XT_pde_val, XT_pde_tst = prp_dat()
 
     # training set
-    u_ini_trn = initial(XT_ini_trn[:,0])
-    u_bnd_trn = boundary(XT_bnd_trn[:,1])
+    u_ini_trn = initial_condition(XT_ini_trn[:,0])
+    u_bnd_trn = boundary_condition(XT_bnd_trn[:,1])
 
     # validation set
     u_ini_val = initial(XT_ini_val[:,0])
