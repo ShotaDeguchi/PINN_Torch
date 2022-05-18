@@ -7,7 +7,7 @@ initial & boundary conditions
 import numpy as np
 import torch
 
-def initial_condition(x):
+def initial(x):
     if torch.is_tensor(x) == True:
         pass
     else:
@@ -15,7 +15,7 @@ def initial_condition(x):
     y = -torch.sin(np.pi * x)
     return y
 
-def boundary_condition(t):
+def boundary(t):
     if torch.is_tensor(t) == True:
         pass
     else:

@@ -27,8 +27,8 @@ def main():
     XT_pde_trn, XT_pde_val, XT_pde_tst = prp_dat()
 
     # training set
-    u_ini_trn = initial_condition(XT_ini_trn[:,0])
-    u_bnd_trn = boundary_condition(XT_bnd_trn[:,1])
+    u_ini_trn = initial(XT_ini_trn[:,0])
+    u_bnd_trn = boundary(XT_bnd_trn[:,1])
 
     # validation set
     u_ini_val = initial(XT_ini_val[:,0])
@@ -59,7 +59,9 @@ def main():
     plt.yscale("log")
     plt.legend(loc = "upper right")
     plt.grid(alpha = .5)
-    plt.show()
+    plt.savefig("./figures/loss_curve.svg")
+    plt.clf()
+    plt.close()
 
     nx, nt = 101, 101
     x, t = np.linspace(-1, 1, nx), np.linspace(0, 1, nt)
@@ -82,7 +84,9 @@ def main():
     plt.xlabel("t")
     plt.ylabel("x")
     plt.title("PINN solution")
-    plt.show()
+    plt.savefig("./figures/infered_solution.svg")
+    plt.clf()
+    plt.close()
 
 if __name__ == "__main__":
     main()
