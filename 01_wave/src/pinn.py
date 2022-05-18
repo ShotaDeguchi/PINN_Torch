@@ -7,26 +7,24 @@ Implementation of PINN in PyTorch
 """
 
 import os
-from turtle import forward
 import numpy as np
 import torch
 import time
-import datetime
 
 class PINN(torch.nn.Module):
 	def __init__(
 		self, 
 		t_ic0_train, x_ic0_train, u_ic0_train, 
 		t_ic1_train, x_ic1_train, u_ic1_train, 
-		t_bc0_train, x_bc0_train, u_bc0_train,    # Dirichlet boundary
-		t_bc1_train, x_bc1_train, u_bc1_train,    # Neumann boundary
+		t_bc0_train, x_bc0_train, u_bc0_train, 
+		t_bc1_train, x_bc1_train, u_bc1_train, 
 		t_pde_train, x_pde_train, 
 		t_ic0_val, x_ic0_val, u_ic0_val, 
 		t_ic1_val, x_ic1_val, u_ic1_val, 
 		t_bc0_val, x_bc0_val, u_bc0_val, 
 		t_bc1_val, x_bc1_val, u_bc1_val, 
 		t_pde_val, x_pde_val, 
-		f_in=2, f_out=1, f_hid=2**6, depth=6, 
+		f_in=2, f_out=1, f_hid=2**5, depth=4, 
 		w_init="Glorot", b_init="zeros", act="tanh", 
 		lr=5e-4, opt = "Adam", 
 		f_scl="minmax", c=1.,
@@ -35,17 +33,17 @@ class PINN(torch.nn.Module):
 	):
 		# initialization
 		super().__init__()
-		self.f_in   = f_in
-		self.f_out  = f_out
-		self.f_hid  = f_hid
-		self.depth  = depth
-		self.w_init = w_init
-		self.b_init = b_init
-		self.act    = act
-		self.lr     = lr
-		self.opt    = opt
-		self.f_scl  = f_scl
-		self.c      = c
+		self.f_in   = f_in     # input feature
+		self.f_out  = f_out    # output feature
+		self.f_hid  = f_hid    # hidden feature
+		self.depth  = depth    # depth
+		self.w_init = w_init   # weight initializer
+		self.b_init = b_init   # bias initializer
+		self.act    = act      # element-wise activation
+		self.lr     = lr       # learning rate
+		self.opt    = opt      # optimizer
+		self.f_scl  = f_scl    # feature scaling
+		self.c      = c        # system parameter
 		self.w_ic   = w_ic
 		self.w_bc   = w_bc
 		self.w_pde  = w_pde
@@ -57,6 +55,7 @@ class PINN(torch.nn.Module):
 		np.random.seed(self.r_seed)
 		torch.manual_seed(self.r_seed)
 		torch.set_default_dtype(self.d_type)
+		torch.cuda.manual_seed(self.d_type)
 
 		# training set
 		self.t_ic0_train = t_ic0_train.astype(np.float32)
@@ -65,12 +64,12 @@ class PINN(torch.nn.Module):
 		self.t_ic1_train = t_ic1_train
 		self.x_ic1_train = x_ic1_train
 		self.u_ic1_train = u_ic1_train
-		self.t_bc0_train = t_bc0_train
-		self.x_bc0_train = x_bc0_train
-		self.u_bc0_train = u_bc0_train
-		self.t_bc1_train = t_bc1_train
-		self.x_bc1_train = x_bc1_train
-		self.u_bc1_train = u_bc1_train
+		self.t_bc0_train = t_bc0_train   # Dirichlet boundary
+		self.x_bc0_train = x_bc0_train   # Dirichlet boundary
+		self.u_bc0_train = u_bc0_train   # Dirichlet boundary
+		self.t_bc1_train = t_bc1_train   # Neumann boundary
+		self.x_bc1_train = x_bc1_train   # Neumann boundary
+		self.u_bc1_train = u_bc1_train   # Neumann boundary
 		self.t_pde_train = t_pde_train
 		self.x_pde_train = x_pde_train
 
@@ -90,34 +89,92 @@ class PINN(torch.nn.Module):
 		self.t_pde_val = t_pde_val
 		self.x_pde_val = x_pde_val
 
-
-
-
-	def forward(
-		self, x
+	def dnn_initializer(
+		self, 
 	):
-		if torch.is_tensor(x) == True:
-			pass
+		dnn = 9999.
+		return dnn
+
+	def opt_algorithm(self, lr, opt, params):
+		print(">>>>> opt_algorithm")
+		print("         learning rate:", lr)
+		print("         optimizer    :", opt)
+		if opt == "SGD":
+			optimizer = torch.optim.SGD(params, lr=lr)
+		elif opt == "RMSprop":
+			optimizer = torch.optim.RMSprop(params, lr=lr)
+		elif opt == "Adam":
+			optimizer = torch.optim.Adam(params, lr=lr)
+		elif opt == "Adamax":
+			optimizer = torch.optim.Adamax(params, lr=lr)
+		elif opt == "Nadam":
+			optimizer = torch.optim.NAdam(params, lr=lr)
 		else:
-			x = torch.from_numpy(x)
+			raise NotImplementedError(">>>>> opt_algorithm")
+		return optimizer
 
+	def lr_schedule(
+		self, 
+		gamma, sch, opt
+	):
+		raise NotImplementedError
+		if sch == "Exponential":
+			scheduler = torch.optim.lr_scheduler.ExponentialLR(opt, gamma, last_epoch=- 1, verbose=False)
+		elif sch == "Cosine":
+			scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max, eta_min=0, last_epoch=- 1)
+		elif sch == "CosineWR":
+			scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, T_0, T_mult=1, eta_min=0, last_epoch=- 1, verbose=False)
+		return scheduler
 
+	def forward(self, x):
+		# if torch.is_tensor(x) == True:
+		# 	pass
+		# else:
+		# 	x = torch.from_numpy(x)
+		if self.f_scl == None or "linear":
+			z = x
+		elif self.f_scl == "minmax":
+			z = 2. * () - 1.
+		elif self.f_scl == "mean":
+			raise NotImplementedError
 
 		z = x
-		y = z
-		return y
+		y_hat = z
+		return y_hat
+
+	def compute_pde(self, x):
+		u_hat = self.forward(x)
+		u_x_hat = torch.autograd.grad(
+			outputs=u_hat, inputs=x, 
+			grad_outputs=None, 
+			retain_graph=None, 
+			create_graph=True,    # True for higher order derivatives
+			only_inputs=True, 
+			allow_unused=False, 
+			is_grads_batched=False
+		)
+		u_xx_hat = torch.autograd.grad(
+			outputs=u_x_hat, inputs=x, 
+			grad_outputs=None, 
+			retain_graph=None, 
+			create_graph=False,    # 2nd order is sufficient
+			only_inputs=True, 
+			allow_unused=False, 
+			is_grads_batched=False
+		)
+		gv_hat = 6.
+		return gv_hat
+
+	def train(self, n_epoch, b_size, es_pat):
+		print(">>>>> train")
+		print("         n_epoch:", n_epoch)
+		print("         b_size :", b_size)
+		print("         es_pat :", es_pat)
 
 
 
-	def train(
-		self, 
-	):
-
-
-
-
-	def infer(
-		self, 
-	):
-
+	def infer(self, x):
+		print(">>>>> train")
+		u_hat = self.forward(x)
+		return u_hat
 
