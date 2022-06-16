@@ -58,19 +58,19 @@ class PINN(torch.nn.Module):
 		torch.cuda.manual_seed(self.d_type)
 
 		# training set
-		self.t_ic0_train = t_ic0_train.astype(np.float32)
+		self.t_ic0_train = t_ic0_train.astype(np.float32)   # Dirichlet boundary
 		self.x_ic0_train = x_ic0_train
 		self.u_ic0_train = u_ic0_train
-		self.t_ic1_train = t_ic1_train
+		self.t_ic1_train = t_ic1_train   # Neumann boundary
 		self.x_ic1_train = x_ic1_train
 		self.u_ic1_train = u_ic1_train
 		self.t_bc0_train = t_bc0_train   # Dirichlet boundary
-		self.x_bc0_train = x_bc0_train   # Dirichlet boundary
-		self.u_bc0_train = u_bc0_train   # Dirichlet boundary
+		self.x_bc0_train = x_bc0_train
+		self.u_bc0_train = u_bc0_train
 		self.t_bc1_train = t_bc1_train   # Neumann boundary
-		self.x_bc1_train = x_bc1_train   # Neumann boundary
-		self.u_bc1_train = u_bc1_train   # Neumann boundary
-		self.t_pde_train = t_pde_train
+		self.x_bc1_train = x_bc1_train
+		self.u_bc1_train = u_bc1_train
+		self.t_pde_train = t_pde_train   # pde residual
 		self.x_pde_train = x_pde_train
 
 		# validation set
@@ -91,9 +91,30 @@ class PINN(torch.nn.Module):
 
 	def dnn_initializer(
 		self, 
+		f_in, f_out, f_hid, depth, 
+		w_init, b_init, act
 	):
-		dnn = 9999.
-		return dnn
+		layers = [f_in] + [f_hid] * (depth-1) + [f_out]
+		network = torch.nn.ModuleList(
+			modules=[
+				torch.nn.Linear(
+					in_features=layers[l], 
+					out_features=layers[l+1], 
+					bias=True
+				) for l in range(depth)
+			]
+		)
+		for l in range(depth):
+			if w_init == "Glorot" and b_init == "zeros":
+				torch.nn.xavier_uniform_(network[l].weight)   # .data required?
+				torch.nn.init.zeros_    (network[l].bias)
+			elif w_init == "He" and b_init == "zeros":
+				raise NotImplementedError(">>>>> dnn_initializer")
+			elif w_init == "LeCun" and b_init == "zeros":
+				raise NotImplementedError(">>>>> dnn_initializer")
+			else:
+				raise NotImplementedError(">>>>> dnn_initializer")
+		return network
 
 	def opt_algorithm(self, lr, opt, params):
 		print(">>>>> opt_algorithm")
@@ -126,12 +147,31 @@ class PINN(torch.nn.Module):
 			scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, T_0, T_mult=1, eta_min=0, last_epoch=- 1, verbose=False)
 		return scheduler
 
+	def act_func(
+		self, act
+	):
+		if act == None or act == "identity":
+			activation = torch.nn.Identity()   # for residual connection
+		elif act == "tanh":
+			activation = torch.nn.Tanh()
+		elif act == "relu":
+			activation = torch.nn.ReLU(inplace=False)   # False by default
+		elif act == "silu":
+			activation = torch.nn.SiLU()
+		elif act == "gelu":
+			activation = torch.nn.GELU()
+		elif act == "mish":
+			activation = torch.nn.Mish()
+		else:
+			raise NotImplementedError(">>>>> act_func")
+		return activation
+
 	def forward(self, x):
 		# if torch.is_tensor(x) == True:
 		# 	pass
 		# else:
 		# 	x = torch.from_numpy(x)
-		if self.f_scl == None or "linear":
+		if self.f_scl == None or self.f_scl == "linear":
 			z = x
 		elif self.f_scl == "minmax":
 			z = 2. * () - 1.
@@ -171,7 +211,27 @@ class PINN(torch.nn.Module):
 		print("         b_size :", b_size)
 		print("         es_pat :", es_pat)
 
+		wait = 0
+		loss_best = 9999.
+		t0 = time.time()
+		if b_size == -1:
+			print(">>>>> full-batch training")
+			for e in range(n_epoch):
+				loss_val = .1
 
+				# early stopping
+				if loss_val < loss_best:
+					loss_best = loss_val
+					wait = 0
+				else:
+					if wait >= es_pat:
+						print(">>>>> early stopping")
+						break
+					wait += 1
+
+		else:
+			print(">>>>> mini-batch training")
+			raise NotImplementedError(">>>>> train")
 
 	def infer(self, x):
 		print(">>>>> train")

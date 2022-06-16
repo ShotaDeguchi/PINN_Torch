@@ -77,35 +77,14 @@ def pde_data():
         t_pde, x_pde
 
 def split_data(x, seed=1234):
-    
+    np.random.seed(seed)
+    t, x, u = load_data()
+    t, x = np.meshgrid(t, x)
 
-    print(x)
-    print(x.reshape(-1, 1))
-
-    x1, x2 = train_test_split(x,  test_size=.4, random_state=seed)
-    x2, x3 = train_test_split(x2, test_size=.5, random_state=seed)
+    t, x, u = t.reshape(-1, 1), x.reshape(-1, 1), u.reshape(-1, 1)
 
     return x1, x2, x3
 
-    # x1, x2, x3 = train_test_split
-
-    # t = t.reshape(-1, 1)
-    # x = x.reshape(-1, 1)
-    # u = u.reshape(-1, 1)
-
-    # return \
-    #     t_train, x_train, u_train, 
-
-    # t_ic0_train, x_ic0_train, u_ic0_train, 
-    # t_ic1_train, x_ic1_train, u_ic1_train, 
-    # t_bc0_train, x_bc0_train, u_bc0_train, 
-    # t_bc1_train, x_bc1_train, u_bc1_train, 
-    # t_pde_train, x_pde_train, 
-    # t_ic0_val, x_ic0_val, u_ic0_val, 
-    # t_ic1_val, x_ic1_val, u_ic1_val, 
-    # t_bc0_val, x_bc0_val, u_bc0_val, 
-    # t_bc1_val, x_bc1_val, u_bc1_val, 
-    # t_pde_val, x_pde_val, 
 
 if __name__ == "__main__":
     t_bc0, x_bc0, u_bc0, \
