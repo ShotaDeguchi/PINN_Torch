@@ -1,7 +1,7 @@
 # PINN_Torch
 This repository implements [PINN](https://doi.org/10.1016/j.jcp.2018.10.045) in [PyTorch](https://pytorch.org/) environment to solve Burgers equation and 2D wave equation. [Automatic differentiation](https://arxiv.org/abs/1502.05767), which is a generalization of [back-propagation](https://doi.org/10.1038/323533a0), is utilized to leverage the convenctional neural network architecture's representation power and to satisfy govering equations, initial, and boundary conditions. 
 
-Please note this repository is not intend to reproduce the results of [PINN_TF2](https://github.com/ShotaDeguchi/PINN_TF2). 
+Please note this repository is not intended to reproduce the results of [PINN_TF2](https://github.com/ShotaDeguchi/PINN_TF2). 
 
 ## Examples
 Burgers equation solution inferred by PINN:
