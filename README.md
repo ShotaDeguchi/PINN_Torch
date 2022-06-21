@@ -4,7 +4,7 @@ This repository implements [PINN](https://doi.org/10.1016/j.jcp.2018.10.045) in 
 Please note this repository is not intended to reproduce the results of [PINN_TF2](https://github.com/ShotaDeguchi/PINN_TF2). 
 
 ## Examples
-Burgers equation solution inferred by PINN:
+Burgers equation solution inferred by PINN (found in <code>./00_burgers/</code>):
 <img src="./00_burgers/figures/infered_solution.svg">
 
 ## References
