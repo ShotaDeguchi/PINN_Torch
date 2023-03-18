@@ -5,7 +5,10 @@ Please note this repository is not intended to reproduce the results of [PINN_TF
 
 ## Examples
 Burgers equation solution inferred by PINN (found in <code>./00_burgers/</code>):
+
 <img src="./00_burgers/figures/infered_solution.svg">
+
+The above result is consistent with [Raissi+2019](https://doi.org/10.1016/j.jcp.2018.10.045). 
 
 ## References
 [1] Raissi, M., Perdikaris, P., Karniadakis, G.E.: Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations, *Journal of Computational Physics*, Vol. 378, pp. 686-707, 2019. ([paper](https://doi.org/10.1016/j.jcp.2018.10.045))
